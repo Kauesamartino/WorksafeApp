@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { criarRecomendacao, listarRecomendacoes, atualizarRecomendacao } from '../../services/mockApi';
 import { Recomendacao } from '../../types/entities';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../../types/navigation';
 
-interface Params { id?: number }
+type RecomendacaoFormRouteProp = RouteProp<RootStackParamList, 'RecomendacaoForm'>;
 
 export default function RecomendacaoFormScreen() {
-  const route = useRoute();
+  const route = useRoute<RecomendacaoFormRouteProp>();
   const nav = useNavigation();
-  const { id } = route.params as Params;
+  const { id } = route.params || {};
   const [estado, setEstado] = useState<Partial<Recomendacao>>({
     usuarioId: 1,
     tipoAtividade: 'PAUSA',
@@ -39,17 +40,25 @@ export default function RecomendacaoFormScreen() {
   async function salvar() {
     if (!validar()) return;
     try {
-      if (id) await atualizarRecomendacao(id, estado as Recomendacao);
-      else await criarRecomendacao(estado as Omit<Recomendacao, 'id'>);
+      console.log('Salvando recomendação:', { id, estado });
+      
+      if (id) {
+        await atualizarRecomendacao(id, estado as Recomendacao);
+        console.log('Recomendação atualizada com sucesso');
+      } else {
+        const resultado = await criarRecomendacao(estado as Omit<Recomendacao, 'id'>);
+        console.log('Recomendação criada com sucesso:', resultado);
+      }
+      
       nav.goBack();
     } catch (e: any) {
+      console.error('Erro ao salvar recomendação:', e);
       Alert.alert('Erro', e.message || 'Falha ao salvar');
     }
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{id ? 'Editar Recomendação' : 'Nova Recomendação'}</Text>
       <Text style={styles.label}>Título</Text>
       <TextInput style={styles.input} value={estado.titulo} onChangeText={t => setEstado(s => ({ ...s, titulo: t }))} />
       <Text style={styles.label}>Descrição</Text>

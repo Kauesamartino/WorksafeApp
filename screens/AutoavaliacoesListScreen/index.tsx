@@ -5,10 +5,7 @@ import { useIsFocused, useNavigation, NavigationProp } from '@react-navigation/n
 import { Autoavaliacao } from '../../types/entities';
 import { listarAutoavaliacoes, removerAutoavaliacao } from '../../services/mockApi';
 import { useTheme } from '../../theme';
-
-type RootStackParamList = {
-  AutoavaliacaoForm: { id?: number } | undefined;
-};
+import { RootStackParamList } from '../../types/navigation';
 
 export default function AutoavaliacoesListScreen() {
   const [data, setData] = useState<Autoavaliacao[]>([]);

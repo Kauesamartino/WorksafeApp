@@ -23,7 +23,7 @@ export default function PerfilScreen() {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Kaue Samartino</Text>
-          <Text style={styles.subtitle}>Desenvolvedora Junior • Engenharia</Text>
+          <Text style={styles.subtitle}>Desenvolvedor Junior • Engenharia</Text>
           <Text style={styles.joinDate}>Membro desde Jan 2023</Text>
         </View>
       </View>

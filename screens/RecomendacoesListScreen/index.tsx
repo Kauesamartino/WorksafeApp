@@ -4,10 +4,7 @@ import { listarRecomendacoes, atualizarRecomendacao, removerRecomendacao } from 
 import { Recomendacao } from '../../types/entities';
 import { useTheme } from '../../theme';
 import { useIsFocused, useNavigation, NavigationProp } from '@react-navigation/native';
-
-type RootStackParamList = {
-  RecomendacaoForm: { id?: number } | undefined;
-};
+import { RootStackParamList } from '../../types/navigation';
 
 export default function RecomendacoesListScreen() {
   const [data, setData] = useState<Recomendacao[]>([]);
@@ -36,12 +33,21 @@ export default function RecomendacoesListScreen() {
   }
 
   const filtradas = useMemo(() => {
-    return data.filter(r => {
+    console.log('Filtros aplicados:', { filtroConsumido, categoria, totalItens: data.length });
+    
+    const result = data.filter(r => {
+      // Filtro por status (pendente/consumido)
       if (filtroConsumido === 'pendentes' && r.consumido) return false;
       if (filtroConsumido === 'consumidos' && !r.consumido) return false;
+      
+      // Filtro por categoria
       if (categoria && r.tipoAtividade !== categoria) return false;
+      
       return true;
     });
+    
+    console.log('Itens filtrados:', result.length);
+    return result;
   }, [data, filtroConsumido, categoria]);
 
   const categorias = Array.from(new Set(data.map(d => d.tipoAtividade)));
@@ -53,9 +59,15 @@ export default function RecomendacoesListScreen() {
         <Button title="Nova" onPress={() => nav.navigate('RecomendacaoForm')} />
       </View>
       <View style={styles.filtersRow}>
-        {['Todos','Pendentes','Consumidos'].map(f => (
-          <TouchableOpacity key={f} style={[styles.filterChip, filtroConsumido===f && styles.filterChipActive]} onPress={() => setFiltroConsumido(f as any)}>
-            <Text style={styles.filterText}>{f}</Text>
+        {[
+          { label: 'Todos', value: 'todos' as const, count: data.length },
+          { label: 'Pendentes', value: 'pendentes' as const, count: data.filter(r => !r.consumido).length },
+          { label: 'Consumidos', value: 'consumidos' as const, count: data.filter(r => r.consumido).length }
+        ].map(({ label, value, count }) => (
+          <TouchableOpacity key={value} style={[styles.filterChip, filtroConsumido === value && styles.filterChipActive]} onPress={() => setFiltroConsumido(value)}>
+            <Text style={[styles.filterText, filtroConsumido === value && styles.filterTextActive]}>
+              {label} ({count})
+            </Text>
           </TouchableOpacity>
         ))}
         <View style={styles.divider} />
@@ -97,6 +109,7 @@ const styles = StyleSheet.create({
   filterChip: { backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, marginRight: 6, marginBottom: 6, elevation: 1 },
   filterChipActive: { backgroundColor: '#2563EB' },
   filterText: { fontSize: 12, fontWeight: '600', color: '#1F2937' },
+  filterTextActive: { color: '#fff' },
   divider: { width: 1, backgroundColor: '#D1D5DB', marginHorizontal: 4 },
   card: { padding: 14, marginBottom: 14, borderRadius: 10, elevation: 2 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

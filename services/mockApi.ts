@@ -244,14 +244,48 @@ function simulateNetwork<T>(data: T, delay = 400): Promise<T> {
 
 // Autoavaliacao CRUD
 export async function listarAutoavaliacoes(): Promise<Autoavaliacao[]> {
-  return simulateNetwork([...autoavaliacoes]);
+  // Ordenar por data decrescente (mais recente primeiro), depois por ID decrescente
+  const sorted = [...autoavaliacoes].sort((a, b) => {
+    const dateComparison = new Date(b.data).getTime() - new Date(a.data).getTime();
+    return dateComparison !== 0 ? dateComparison : b.id - a.id;
+  });
+  return simulateNetwork(sorted);
 }
 
 export async function criarAutoavaliacao(payload: Omit<Autoavaliacao, 'id'>): Promise<Autoavaliacao> {
-  const id = autoavaliacoes.length ? Math.max(...autoavaliacoes.map(a => a.id)) + 1 : 1;
-  const nova: Autoavaliacao = { id, ...payload };
-  autoavaliacoes.push(nova);
-  return simulateNetwork(nova);
+  try {
+    console.log('Criando autoavaliação com payload:', payload);
+    console.log('Autoavaliacoes existentes:', autoavaliacoes.length);
+    
+    // Gerar ID de forma mais segura
+    let id = 1;
+    if (autoavaliacoes.length > 0) {
+      const ids = autoavaliacoes.map(a => a.id).filter(id => typeof id === 'number' && !isNaN(id));
+      id = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+    }
+    
+    console.log('ID gerado:', id);
+    
+    const nova: Autoavaliacao = { 
+      id,
+      data: payload.data || new Date().toISOString().substring(0, 10),
+      usuarioId: payload.usuarioId || 1,
+      estresse: payload.estresse ?? 5,
+      humor: payload.humor ?? 5,
+      energia: payload.energia ?? 5,
+      qualidadeSono: payload.qualidadeSono ?? 5,
+      comentarios: payload.comentarios || ''
+    };
+    
+    console.log('Nova autoavaliação criada:', nova);
+    autoavaliacoes.push(nova);
+    console.log('Total de autoavaliacoes após inserção:', autoavaliacoes.length);
+    
+    return simulateNetwork(nova);
+  } catch (error) {
+    console.error('Erro ao criar autoavaliação:', error);
+    throw error;
+  }
 }
 
 export async function atualizarAutoavaliacao(id: number, updates: Partial<Omit<Autoavaliacao, 'id'>>): Promise<Autoavaliacao> {
@@ -268,14 +302,43 @@ export async function removerAutoavaliacao(id: number): Promise<void> {
 
 // Recomendacao CRUD
 export async function listarRecomendacoes(): Promise<Recomendacao[]> {
-  return simulateNetwork([...recomendacoes]);
+  // Ordenar por data decrescente (mais recente primeiro), depois por ID decrescente
+  const sorted = [...recomendacoes].sort((a, b) => {
+    const dateComparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    return dateComparison !== 0 ? dateComparison : b.id - a.id;
+  });
+  return simulateNetwork(sorted);
 }
 
 export async function criarRecomendacao(payload: Omit<Recomendacao, 'id'>): Promise<Recomendacao> {
-  const id = recomendacoes.length ? Math.max(...recomendacoes.map(r => r.id)) + 1 : 1;
-  const nova: Recomendacao = { id, ...payload };
-  recomendacoes.push(nova);
-  return simulateNetwork(nova);
+  try {
+    console.log('Criando recomendação com payload:', payload);
+    
+    // Gerar ID de forma mais segura
+    let id = 1;
+    if (recomendacoes.length > 0) {
+      const ids = recomendacoes.map(r => r.id).filter(id => typeof id === 'number' && !isNaN(id));
+      id = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+    }
+    
+    const nova: Recomendacao = { 
+      id,
+      usuarioId: payload.usuarioId || 1,
+      tipoAtividade: payload.tipoAtividade || 'PAUSA',
+      titulo: payload.titulo || '',
+      descricao: payload.descricao || '',
+      createdAt: payload.createdAt || new Date().toISOString().substring(0, 10),
+      consumido: payload.consumido || false
+    };
+    
+    console.log('Nova recomendação criada:', nova);
+    recomendacoes.push(nova);
+    
+    return simulateNetwork(nova);
+  } catch (error) {
+    console.error('Erro ao criar recomendação:', error);
+    throw error;
+  }
 }
 
 export async function atualizarRecomendacao(id: number, updates: Partial<Omit<Recomendacao, 'id'>>): Promise<Recomendacao> {
@@ -296,5 +359,10 @@ export async function listarAlertas(): Promise<Alerta[]> {
 }
 
 export async function listarWearableData(): Promise<WearableData[]> {
-  return simulateNetwork([...wearableData]);
+  // Ordenar por data decrescente (mais recente primeiro), depois por ID decrescente
+  const sorted = [...wearableData].sort((a, b) => {
+    const dateComparison = new Date(b.data).getTime() - new Date(a.data).getTime();
+    return dateComparison !== 0 ? dateComparison : b.id - a.id;
+  });
+  return simulateNetwork(sorted);
 }

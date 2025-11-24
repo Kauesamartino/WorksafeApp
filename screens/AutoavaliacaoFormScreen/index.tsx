@@ -6,15 +6,16 @@ import Slider from '@react-native-community/slider';
 import { criarAutoavaliacao, atualizarAutoavaliacao, listarAutoavaliacoes } from '../../services/mockApi';
 import { Autoavaliacao } from '../../types/entities';
 import { useTheme } from '../../theme';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../../types/navigation';
 
-interface RouteParams { id?: number }
+type AutoavaliacaoFormRouteProp = RouteProp<RootStackParamList, 'AutoavaliacaoForm'>;
 
 export default function AutoavaliacaoFormScreen() {
-  const route = useRoute();
+  const route = useRoute<AutoavaliacaoFormRouteProp>();
   const nav = useNavigation();
   const { colors } = useTheme();
-  const { id } = route.params as RouteParams;
+  const { id } = route.params || {};
   const [estado, setEstado] = useState<Partial<Autoavaliacao>>({
     usuarioId: 1,
     data: new Date().toISOString().substring(0, 10),
@@ -39,29 +40,43 @@ export default function AutoavaliacaoFormScreen() {
   function validar() {
     const campos = ['estresse','humor','energia','qualidadeSono'] as const;
     for (const c of campos) {
-      const v = (estado as any)[c];
-      if (v < 0 || v > 10 || isNaN(v)) {
+      const v = estado[c];
+      if (typeof v !== 'number' || v < 0 || v > 10 || isNaN(v)) {
         Alert.alert('Valor inválido', `Campo ${c} deve estar entre 0 e 10.`);
         return false;
       }
     }
+    
+    if (!estado.data) {
+      Alert.alert('Erro', 'Data é obrigatória');
+      return false;
+    }
+    
     return true;
   }
 
   async function salvar() {
     if (!validar()) return;
     try {
-      if (id) await atualizarAutoavaliacao(id, estado as Autoavaliacao);
-      else await criarAutoavaliacao(estado as Omit<Autoavaliacao, 'id'>);
+      console.log('Salvando autoavaliação:', { id, estado });
+      
+      if (id) {
+        await atualizarAutoavaliacao(id, estado as Autoavaliacao);
+        console.log('Autoavaliação atualizada com sucesso');
+      } else {
+        const resultado = await criarAutoavaliacao(estado as Omit<Autoavaliacao, 'id'>);
+        console.log('Autoavaliação criada com sucesso:', resultado);
+      }
+      
       nav.goBack();
     } catch (e: any) {
+      console.error('Erro ao salvar autoavaliação:', e);
       Alert.alert('Erro', e.message || 'Falha ao salvar');
     }
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }] }>
-      <Text style={styles.title}>{id ? 'Editar Autoavaliação' : 'Nova Autoavaliação'}</Text>
       {(['estresse','humor','energia','qualidadeSono'] as const).map(key => (
         <View key={key} style={styles.field}> 
           <View style={styles.sliderHeader}> 

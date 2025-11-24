@@ -185,26 +185,26 @@ export default function AppNavigator() {
         <Stack.Screen 
           name="AutoavaliacaoForm" 
           component={AutoavaliacaoFormScreen}
-          options={{ 
-            title: '✏️ Nova Autoavaliação',
+          options={({ route }) => ({
+            title: (route.params as any)?.id ? 'Editar Autoavaliação' : 'Nova Autoavaliação',
             headerTitleStyle: {
               fontSize: 18,
               fontWeight: '700',
-              color: '#059669',
+              color: '#1F2937',
             }
-          }}
+          })}
         />
         <Stack.Screen 
           name="RecomendacaoForm" 
           component={RecomendacaoFormScreen}
-          options={{ 
-            title: '💡 Nova Recomendação',
+          options={({ route }) => ({
+            title: (route.params as any)?.id ? 'Editar Recomendação' : 'Nova Recomendação',
             headerTitleStyle: {
               fontSize: 18,
               fontWeight: '700',
-              color: '#10B981',
+              color: '#1F2937',
             }
-          }}
+          })}
         />
       </Stack.Navigator>
     </NavigationContainer>
