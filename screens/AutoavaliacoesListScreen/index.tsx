@@ -24,8 +24,16 @@ export default function AutoavaliacoesListScreen() {
     try {
       console.log('Carregando autoavaliações...');
       const res = await apiService.getAutoavaliacoes();
-      console.log('Autoavaliações carregadas:', res);
-      setData(res);
+      
+      // Ordena autoavaliações por data decrescente (mais recentes primeiro)
+      const autoavaliacoesOrdenadas = res.sort((a: Autoavaliacao, b: Autoavaliacao) => {
+        const dataA = new Date(a.data);
+        const dataB = new Date(b.data);
+        return dataB.getTime() - dataA.getTime();
+      });
+      
+      console.log('Autoavaliações carregadas e ordenadas:', autoavaliacoesOrdenadas.length);
+      setData(autoavaliacoesOrdenadas);
     } catch (e: any) {
       console.error('Erro ao carregar autoavaliações:', e);
       

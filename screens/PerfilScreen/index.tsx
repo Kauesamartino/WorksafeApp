@@ -27,19 +27,12 @@ export default function PerfilScreen({ onLogout }: PerfilScreenProps) {
         apiService.getRecomendacoes()
       ]);
       
-      // Ordena autoavaliações por data decrescente (mais recentes primeiro)
-      const autoavaliacoesOrdenadas = autoavaliacoes.sort((a: Autoavaliacao, b: Autoavaliacao) => {
-        const dataA = new Date(a.data);
-        const dataB = new Date(b.data);
-        return dataB.getTime() - dataA.getTime();
-      });
-      
       setUserData(userInfo);
-      setAutos(autoavaliacoesOrdenadas);
+      setAutos(autoavaliacoes);
       setRecs(recomendacoes);
       
       console.log('✅ PerfilScreen: Dados carregados com sucesso');
-      console.log('📊 PerfilScreen: Autoavaliações ordenadas:', autoavaliacoesOrdenadas.length);
+      console.log('📊 PerfilScreen: Autoavaliações carregadas:', autoavaliacoes.length);
     } catch (error) {
       console.error('❌ PerfilScreen: Erro ao carregar dados:', error);
       Alert.alert('Erro', 'Não foi possível carregar os dados do perfil');

@@ -204,7 +204,7 @@ export const authService = {
     }
     
     // Busca informações do usuário usando o username
-    const response = await api.get(`/usuarios/${username}`);
+    const response = await api.get(`/usuarios/username/${username}`);
     return response.data;
   },
 };
