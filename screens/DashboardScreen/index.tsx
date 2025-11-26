@@ -29,9 +29,8 @@ export default function DashboardScreen() {
   };
 
   const pendentes = recs.filter(r => !r.consumido).length;
-  const ultimoWear = wear[0]; // Como os dados agora vêm ordenados por data decrescente
+  const ultimoWear = wear[0]; 
 
-  // Como os dados agora vêm ordenados por data decrescente, os mais recentes são os primeiros
   const ultimaAuto = autos.length ? autos[0] : undefined;
   const penultimoAuto = autos.length > 1 ? autos[1] : undefined;
 

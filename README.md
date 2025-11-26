@@ -6,7 +6,7 @@ Davi Praxedes Santos Silva - 563719
 
 João dos Santos Cardoso de Jesus - 560400
 
-Link video do app - https://youtube.com/shorts/0OHeQmUIMVs
+Link video do app - https://youtu.be/qsDnlQZsxCc
 
 # 🏢 WorkSafe App
 

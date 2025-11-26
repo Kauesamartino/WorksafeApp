@@ -13,7 +13,6 @@ export default function WearableDataScreen() {
     const avgSteps = Math.round(data.reduce((s,d) => s + d.passos, 0) / data.length);
     const avgSleep = (data.reduce((s,d) => s + d.sonoTotal, 0) / data.length).toFixed(1);
     
-    // Trend based on last 3 vs first 3 days
     const recent = data.slice(-3);
     const older = data.slice(0, 3);
     const recentAvg = recent.reduce((s,d) => s + d.passos, 0) / recent.length;

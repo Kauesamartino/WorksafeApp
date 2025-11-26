@@ -1,7 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Configuração base da API
 const api = axios.create({
   baseURL: 'https://worksafe-api.onrender.com/api',
   timeout: 10000,
@@ -10,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Configuração para API do ViaCEP
 const viaCepApi = axios.create({
   baseURL: 'https://viacep.com.br/ws',
   timeout: 5000,
@@ -65,10 +63,8 @@ export const tokenManager = {
   },
 };
 
-// Interceptor para adicionar o token automaticamente
 api.interceptors.request.use(
   async (config) => {
-    // Pula autenticação apenas para login e cadastro (POST /usuarios)
     const isAuthEndpoint = config.url?.includes('/auth/login') || 
                           (config.url?.includes('/usuarios') && config.method?.toLowerCase() === 'post');
     
@@ -86,21 +82,17 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para tratar respostas e erros
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Token expirado ou inválido, remove token e força novo login
       await tokenManager.removeToken();
-      // Aqui você pode disparar um evento global ou navegar para login
       console.warn('Token expirado ou inválido. Usuário precisa fazer login novamente.');
     }
     return Promise.reject(error);
   }
 );
 
-// Tipos para autenticação
 export interface LoginRequest {
   username: string;
   password: string;
@@ -125,7 +117,7 @@ export interface CreateUserRequest {
   };
   cargo: string;
   departamento: string;
-  dataNascimento: string; // YYYY-MM-DD
+  dataNascimento: string; 
   endereco: {
     logradouro: string;
     bairro: string;
@@ -151,7 +143,6 @@ export interface CepResponse {
   erro?: boolean;
 }
 
-// Serviços de CEP
 export const cepService = {
   buscarCep: async (cep: string): Promise<CepResponse> => {
     // Remove formatação do CEP (mantém apenas números)
@@ -171,13 +162,11 @@ export const cepService = {
   },
 };
 
-// Serviços de autenticação
 export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await api.post('/auth/login', credentials);
     const loginData = response.data;
     
-    // Salva o token e username automaticamente após login bem-sucedido
     if (loginData.token) {
       await tokenManager.saveToken(loginData.token);
       await tokenManager.saveUsername(credentials.username);
@@ -192,26 +181,21 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    // Remove o token do storage
     await tokenManager.removeToken();
   },
 
   getUserInfo: async (): Promise<any> => {
-    // Recupera o username salvo durante o login
     const username = await tokenManager.getUsername();
     if (!username) {
       throw new Error('Username não encontrado');
     }
     
-    // Busca informações do usuário usando o username
     const response = await api.get(`/usuarios/username/${username}`);
     return response.data;
   },
 };
 
-// Serviços existentes atualizados para usar a API real
 export const apiService = {
-  // Autoavaliações
   getAutoavaliacoes: async () => {
     const response = await api.get('/autoavaliacoes');
     return response.data;
@@ -231,7 +215,6 @@ export const apiService = {
     await api.delete(`/autoavaliacoes/${id}`);
   },
 
-  // Recomendações
   getRecomendacoes: async () => {
     const response = await api.get('/recomendacoes');
     return response.data;
@@ -251,13 +234,11 @@ export const apiService = {
     await api.delete(`/recomendacoes/${id}`);
   },
 
-  // Alertas
   getAlertas: async () => {
     const response = await api.get('/alertas');
     return response.data;
   },
 
-  // Dados de wearables
   getWearableData: async () => {
     const response = await api.get('/wearable-data');
     return response.data;

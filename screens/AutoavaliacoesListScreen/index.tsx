@@ -16,7 +16,7 @@ export default function AutoavaliacoesListScreen() {
   const isFocused = useIsFocused();
 
   async function load(retryCount = 0) {
-    if (loading) return; // Evita múltiplas requisições simultâneas
+    if (loading) return; 
     
     setLoading(true); 
     setError('');
@@ -25,7 +25,6 @@ export default function AutoavaliacoesListScreen() {
       console.log('Carregando autoavaliações...');
       const res = await apiService.getAutoavaliacoes();
       
-      // Ordena autoavaliações por data decrescente (mais recentes primeiro)
       const autoavaliacoesOrdenadas = res.sort((a: Autoavaliacao, b: Autoavaliacao) => {
         const dataA = new Date(a.data);
         const dataB = new Date(b.data);
@@ -37,7 +36,7 @@ export default function AutoavaliacoesListScreen() {
     } catch (e: any) {
       console.error('Erro ao carregar autoavaliações:', e);
       
-      // Retry automático para erros 404 (até 2 tentativas)
+
       if (e.response?.status === 404 && retryCount < 2) {
         console.log(`Tentando novamente... (tentativa ${retryCount + 1}/2)`);
         setTimeout(() => load(retryCount + 1), 1000);
@@ -53,7 +52,7 @@ export default function AutoavaliacoesListScreen() {
 
   useEffect(() => { 
     if (isFocused) {
-      // Debounce para evitar múltiplas chamadas rápidas
+
       const timer = setTimeout(() => {
         load();
       }, 100);
