@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useIsFocused } from '@react-navigation/native';
 import { apiService, authService } from '../../services/api';
 import { Autoavaliacao, Recomendacao } from '../../types/entities';
 
@@ -13,29 +14,46 @@ export default function PerfilScreen({ onLogout }: PerfilScreenProps) {
   const [recs, setRecs] = useState<Recomendacao[]>([]);
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const isFocused = useIsFocused();
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      console.log('🔄 PerfilScreen: Carregando dados do perfil...');
+      
+      const [userInfo, autoavaliacoes, recomendacoes] = await Promise.all([
+        authService.getUserInfo(),
+        apiService.getAutoavaliacoes(),
+        apiService.getRecomendacoes()
+      ]);
+      
+      // Ordena autoavaliações por data decrescente (mais recentes primeiro)
+      const autoavaliacoesOrdenadas = autoavaliacoes.sort((a: Autoavaliacao, b: Autoavaliacao) => {
+        const dataA = new Date(a.data);
+        const dataB = new Date(b.data);
+        return dataB.getTime() - dataA.getTime();
+      });
+      
+      setUserData(userInfo);
+      setAutos(autoavaliacoesOrdenadas);
+      setRecs(recomendacoes);
+      
+      console.log('✅ PerfilScreen: Dados carregados com sucesso');
+      console.log('📊 PerfilScreen: Autoavaliações ordenadas:', autoavaliacoesOrdenadas.length);
+    } catch (error) {
+      console.error('❌ PerfilScreen: Erro ao carregar dados:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os dados do perfil');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [userInfo, autoavaliacoes, recomendacoes] = await Promise.all([
-          authService.getUserInfo(),
-          apiService.getAutoavaliacoes(),
-          apiService.getRecomendacoes()
-        ]);
-        setUserData(userInfo);
-        setAutos(autoavaliacoes);
-        setRecs(recomendacoes);
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        Alert.alert('Erro', 'Não foi possível carregar os dados do perfil');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadData();
-  }, []);
+    if (isFocused) {
+      console.log('🔍 PerfilScreen: Tela ganhou foco, recarregando dados...');
+      loadData();
+    }
+  }, [isFocused]);
 
   const pendentes = recs.filter(r => !r.consumido).length;
   const totalAutos = autos.length;
@@ -82,6 +100,17 @@ export default function PerfilScreen({ onLogout }: PerfilScreenProps) {
             {loading ? '...' : userData?.createdAt ? `Membro desde ${new Date(userData.createdAt).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}` : 'Membro desde 2023'}
           </Text>
         </View>
+        <TouchableOpacity 
+          style={styles.refreshButton} 
+          onPress={loadData}
+          disabled={loading}
+        >
+          <Ionicons 
+            name="refresh" 
+            size={20} 
+            color={loading ? '#9CA3AF' : '#2563EB'} 
+          />
+        </TouchableOpacity>
       </View>
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
@@ -188,5 +217,14 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontSize: 16,
     fontWeight: '600',
+  },
+  refreshButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
   },
 });

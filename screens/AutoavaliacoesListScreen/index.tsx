@@ -15,17 +15,44 @@ export default function AutoavaliacoesListScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const isFocused = useIsFocused();
 
-  async function load() {
-    setLoading(true); setError('');
+  async function load(retryCount = 0) {
+    if (loading) return; // Evita múltiplas requisições simultâneas
+    
+    setLoading(true); 
+    setError('');
+    
     try {
+      console.log('Carregando autoavaliações...');
       const res = await apiService.getAutoavaliacoes();
+      console.log('Autoavaliações carregadas:', res);
       setData(res);
     } catch (e: any) {
-      setError(e.message || 'Erro ao carregar');
-    } finally { setLoading(false); }
+      console.error('Erro ao carregar autoavaliações:', e);
+      
+      // Retry automático para erros 404 (até 2 tentativas)
+      if (e.response?.status === 404 && retryCount < 2) {
+        console.log(`Tentando novamente... (tentativa ${retryCount + 1}/2)`);
+        setTimeout(() => load(retryCount + 1), 1000);
+        return;
+      }
+      
+      const errorMessage = e.response?.data?.message || e.message || 'Erro ao carregar autoavaliações';
+      setError(errorMessage);
+    } finally { 
+      setLoading(false); 
+    }
   }
 
-  useEffect(() => { if (isFocused) load(); }, [isFocused]);
+  useEffect(() => { 
+    if (isFocused) {
+      // Debounce para evitar múltiplas chamadas rápidas
+      const timer = setTimeout(() => {
+        load();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isFocused]);
 
   async function excluir(id: number) {
     try { await apiService.deleteAutoavaliacao(id); load(); } catch (e: any) { setError(e.message || 'Falha ao excluir'); }

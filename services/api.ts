@@ -16,8 +16,9 @@ const viaCepApi = axios.create({
   timeout: 5000,
 });
 
-// Funções para gerenciar o token
+// Funções para gerenciar o token e username
 const TOKEN_KEY = '@worksafe_token';
+const USERNAME_KEY = '@worksafe_username';
 
 export const tokenManager = {
   saveToken: async (token: string): Promise<void> => {
@@ -25,6 +26,23 @@ export const tokenManager = {
       await AsyncStorage.setItem(TOKEN_KEY, token);
     } catch (error) {
       console.error('Erro ao salvar token:', error);
+    }
+  },
+
+  saveUsername: async (username: string): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(USERNAME_KEY, username);
+    } catch (error) {
+      console.error('Erro ao salvar username:', error);
+    }
+  },
+
+  getUsername: async (): Promise<string | null> => {
+    try {
+      return await AsyncStorage.getItem(USERNAME_KEY);
+    } catch (error) {
+      console.error('Erro ao recuperar username:', error);
+      return null;
     }
   },
 
@@ -40,6 +58,7 @@ export const tokenManager = {
   removeToken: async (): Promise<void> => {
     try {
       await AsyncStorage.removeItem(TOKEN_KEY);
+      await AsyncStorage.removeItem(USERNAME_KEY);
     } catch (error) {
       console.error('Erro ao remover token:', error);
     }
@@ -49,8 +68,9 @@ export const tokenManager = {
 // Interceptor para adicionar o token automaticamente
 api.interceptors.request.use(
   async (config) => {
-    // Pula autenticação para endpoints de login e cadastro
-    const isAuthEndpoint = config.url?.includes('/auth/login') || config.url?.includes('/usuarios');
+    // Pula autenticação apenas para login e cadastro (POST /usuarios)
+    const isAuthEndpoint = config.url?.includes('/auth/login') || 
+                          (config.url?.includes('/usuarios') && config.method?.toLowerCase() === 'post');
     
     if (!isAuthEndpoint) {
       const token = await tokenManager.getToken();
@@ -157,9 +177,10 @@ export const authService = {
     const response = await api.post('/auth/login', credentials);
     const loginData = response.data;
     
-    // Salva o token automaticamente após login bem-sucedido
+    // Salva o token e username automaticamente após login bem-sucedido
     if (loginData.token) {
       await tokenManager.saveToken(loginData.token);
+      await tokenManager.saveUsername(credentials.username);
     }
     
     return loginData;
@@ -176,8 +197,14 @@ export const authService = {
   },
 
   getUserInfo: async (): Promise<any> => {
-    // Busca informações do usuário baseado no token JWT
-    const response = await api.get('/usuarios/id');
+    // Recupera o username salvo durante o login
+    const username = await tokenManager.getUsername();
+    if (!username) {
+      throw new Error('Username não encontrado');
+    }
+    
+    // Busca informações do usuário usando o username
+    const response = await api.get(`/usuarios/${username}`);
     return response.data;
   },
 };

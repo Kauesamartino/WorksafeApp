@@ -14,6 +14,7 @@ import RecomendacaoFormScreen from '../screens/RecomendacaoFormScreen';
 import AutoavaliacaoFormScreen from '../screens/AutoavaliacaoFormScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import { tokenManager, authService } from '../services/api';
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
@@ -181,10 +182,30 @@ export default function AppNavigator() {
   const [showRegister, setShowRegister] = useState(false);
 
   useEffect(() => {
-    // Aqui você pode verificar se existe um token salvo
-    // Por enquanto, vamos assumir que o usuário não está logado
-    setIsLoading(false);
+    checkAuthStatus();
   }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = await tokenManager.getToken();
+      
+      if (token) {
+        console.log('🔍 Token encontrado, validando...');
+        // Por enquanto, apenas verifica se o token existe
+        // A validação será feita quando necessário nas requisições
+        console.log('✅ Token encontrado, assumindo válido');
+        setIsAuthenticated(true);
+      } else {
+        console.log('🚫 Nenhum token encontrado');
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao verificar status de autenticação:', error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLoginSuccess = (userData: any) => {
     // Aqui você salvaria o token e dados do usuário
@@ -192,9 +213,16 @@ export default function AppNavigator() {
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
-    // Limpar token e dados salvos
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      setIsAuthenticated(false);
+      console.log('Logout realizado com sucesso');
+    } catch (error) {
+      console.error('Erro durante logout:', error);
+      // Mesmo com erro, remove a autenticação local
+      setIsAuthenticated(false);
+    }
   };
 
   const handleRegisterSuccess = () => {
@@ -204,7 +232,7 @@ export default function AppNavigator() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Carregando...</Text>
+        <Text style={{ fontSize: 16, color: '#6B7280' }}>Verificando autenticação...</Text>
       </View>
     );
   }

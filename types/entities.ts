@@ -15,7 +15,7 @@ export interface Usuario {
 
 export interface Autoavaliacao {
   id: number;
-  usuarioId: number;
+  usuarioName: string;
   data: string; // ISO Date
   estresse: number; // 0-10
   humor: number; // 0-10
