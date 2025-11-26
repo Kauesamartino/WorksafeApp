@@ -14,6 +14,7 @@ export default function AlertasListScreen() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Alertas</Text>
       <FlatList
         data={ordenados}
         keyExtractor={i => i.id.toString()}
