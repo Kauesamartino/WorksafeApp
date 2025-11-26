@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, ScrollView } from 'react-native';
-import { listarWearableData } from '../../services/mockApi';
+import { apiService } from '../../services/api';
 import { WearableData } from '../../types/entities';
 
 export default function WearableDataScreen() {
   const [data, setData] = useState<WearableData[]>([]);
-  useEffect(() => { listarWearableData().then(setData); }, []);
+  useEffect(() => { apiService.getWearableData().then(setData); }, []);
 
   const stats = useMemo(() => {
     if (!data.length) return { avgHeart: 0, avgSteps: 0, avgSleep: 0, trend: 'stable' };

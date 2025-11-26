@@ -1,5 +1,7 @@
 export type RootStackParamList = {
   Root: undefined;
+  Login: undefined;
+  Register: undefined;
   AutoavaliacaoForm: { id?: number } | undefined;
   RecomendacaoForm: { id?: number } | undefined;
 };

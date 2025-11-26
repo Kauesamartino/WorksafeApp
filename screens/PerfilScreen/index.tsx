@@ -1,30 +1,86 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { listarAutoavaliacoes, listarRecomendacoes } from '../../services/mockApi';
+import { apiService, authService } from '../../services/api';
 import { Autoavaliacao, Recomendacao } from '../../types/entities';
 
-export default function PerfilScreen() {
+interface PerfilScreenProps {
+  onLogout?: () => void;
+}
+
+export default function PerfilScreen({ onLogout }: PerfilScreenProps) {
   const [autos, setAutos] = useState<Autoavaliacao[]>([]);
   const [recs, setRecs] = useState<Recomendacao[]>([]);
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    listarAutoavaliacoes().then(setAutos);
-    listarRecomendacoes().then(setRecs);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [userInfo, autoavaliacoes, recomendacoes] = await Promise.all([
+          authService.getUserInfo(),
+          apiService.getAutoavaliacoes(),
+          apiService.getRecomendacoes()
+        ]);
+        setUserData(userInfo);
+        setAutos(autoavaliacoes);
+        setRecs(recomendacoes);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        Alert.alert('Erro', 'Não foi possível carregar os dados do perfil');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
   }, []);
 
   const pendentes = recs.filter(r => !r.consumido).length;
   const totalAutos = autos.length;
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sair',
+      'Tem certeza que deseja sair da sua conta?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Sair', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await authService.logout();
+              onLogout?.();
+            } catch (error) {
+              console.error('Erro no logout:', error);
+              onLogout?.(); // Sair mesmo se houver erro
+            }
+          }
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
-          <Text style={styles.avatarText}>KS</Text>
+          <Text style={styles.avatarText}>
+            {loading ? '...' : userData ? `${userData.nome?.[0] || ''}${userData.sobrenome?.[0] || ''}` : 'US'}
+          </Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Kaue Samartino</Text>
-          <Text style={styles.subtitle}>Desenvolvedor Junior • Engenharia</Text>
-          <Text style={styles.joinDate}>Membro desde Jan 2023</Text>
+          <Text style={styles.title}>
+            {loading ? 'Carregando...' : userData ? `${userData.nome || ''} ${userData.sobrenome || ''}`.trim() : 'Usuário'}
+          </Text>
+          <Text style={styles.subtitle}>
+            {loading ? '...' : userData ? `${userData.cargo || 'Cargo'} • ${userData.departamento || 'Departamento'}` : 'Cargo • Departamento'}
+          </Text>
+          <Text style={styles.joinDate}>
+            {loading ? '...' : userData?.createdAt ? `Membro desde ${new Date(userData.createdAt).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}` : 'Membro desde 2023'}
+          </Text>
         </View>
       </View>
       <View style={styles.statsGrid}>
@@ -61,7 +117,14 @@ export default function PerfilScreen() {
       </View>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Sobre</Text>
-        <Text style={styles.about}>Desenvolvedor Junior focado em bem-estar no trabalho híbrido. Utiliza este app para monitorar saúde mental, física e produtividade. Participa ativamente do programa de wellness da empresa.</Text>
+        <Text style={styles.about}>
+          {loading 
+            ? 'Carregando informações...' 
+            : userData 
+              ? `${userData.cargo || 'Profissional'} do departamento de ${userData.departamento || 'TI'} focado em bem-estar no trabalho. Utiliza este app para monitorar saúde mental, física e produtividade.${userData.email ? ` Contato: ${userData.email}` : ''}` 
+              : 'Profissional focado em bem-estar no trabalho híbrido. Utiliza este app para monitorar saúde mental, física e produtividade.'
+          }
+        </Text>
       </View>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Conquistas</Text>
@@ -80,6 +143,11 @@ export default function PerfilScreen() {
           </View>
         </View>
       </View>
+
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Ionicons name="log-out-outline" size={20} color="#DC2626" />
+        <Text style={styles.logoutText}>Sair da Conta</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -103,5 +171,22 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: 'row', justifyContent: 'space-between' },
   badge: { backgroundColor: '#fff', padding: 16, borderRadius: 12, alignItems: 'center', flex: 1, marginHorizontal: 4 },
   badgeIcon: { marginBottom: 8 },
-  badgeText: { fontSize: 12, fontWeight: '600', color: '#374151' }
+  badgeText: { fontSize: 12, fontWeight: '600', color: '#374151' },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FEF2F2',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    gap: 8,
+  },
+  logoutText: {
+    color: '#DC2626',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

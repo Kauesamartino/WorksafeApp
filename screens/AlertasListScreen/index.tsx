@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { listarAlertas } from '../../services/mockApi';
+import { apiService } from '../../services/api';
 import { Alerta } from '../../types/entities';
 
 export default function AlertasListScreen() {
   const [data, setData] = useState<Alerta[]>([]);
-  useEffect(() => { listarAlertas().then(setData); }, []);
+  useEffect(() => { apiService.getAlertas().then(setData); }, []);
 
   const ordenados = useMemo(() => {
     const peso: Record<string, number> = { 'ALTA': 3, 'MEDIA': 2, 'BAIXA': 1 };

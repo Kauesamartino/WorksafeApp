@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, Button, TouchableOpacity } from 'react-native';
-import { listarRecomendacoes, atualizarRecomendacao, removerRecomendacao } from '../../services/mockApi';
+import { apiService } from '../../services/api';
 import { Recomendacao } from '../../types/entities';
 import { useTheme } from '../../theme';
 import { useIsFocused, useNavigation, NavigationProp } from '@react-navigation/native';
@@ -18,18 +18,18 @@ export default function RecomendacoesListScreen() {
   async function load() {
     setLoading(true);
     try {
-      const res = await listarRecomendacoes();
+      const res = await apiService.getRecomendacoes();
       setData(res);
     } finally { setLoading(false); }
   }
   useEffect(() => { if (focused) load(); }, [focused]);
 
   async function toggleConsumido(item: Recomendacao) {
-    await atualizarRecomendacao(item.id, { consumido: !item.consumido });
+    await apiService.updateRecomendacao(item.id, { consumido: !item.consumido });
     load();
   }
   async function excluir(id: number) {
-    await removerRecomendacao(id); load();
+    await apiService.deleteRecomendacao(id); load();
   }
 
   const filtradas = useMemo(() => {
@@ -91,7 +91,6 @@ export default function RecomendacoesListScreen() {
             <Text style={styles.tipo}>{item.tipoAtividade}</Text>
             <View style={styles.actionsRow}>
               <Button title={item.consumido ? 'Marcar pendente' : 'Marcar consumido'} onPress={() => toggleConsumido(item)} />
-              <Button title="Editar" onPress={() => nav.navigate('RecomendacaoForm', { id: item.id })} />
               <Button title="Excluir" color={colors.danger} onPress={() => excluir(item.id)} />
             </View>
           </View>

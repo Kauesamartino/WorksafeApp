@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 // Slider opcional: se biblioteca não instalada, substituir por TextInput.
 // Para produção: npx expo install @react-native-community/slider
 import Slider from '@react-native-community/slider';
-import { criarAutoavaliacao, atualizarAutoavaliacao, listarAutoavaliacoes } from '../../services/mockApi';
+import { apiService } from '../../services/api';
 import { Autoavaliacao } from '../../types/entities';
 import { useTheme } from '../../theme';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -17,7 +17,6 @@ export default function AutoavaliacaoFormScreen() {
   const { colors } = useTheme();
   const { id } = route.params || {};
   const [estado, setEstado] = useState<Partial<Autoavaliacao>>({
-    usuarioId: 1,
     data: new Date().toISOString().substring(0, 10),
     estresse: 5,
     humor: 5,
@@ -29,8 +28,8 @@ export default function AutoavaliacaoFormScreen() {
   useEffect(() => {
     async function carregar() {
       if (id) {
-        const lista = await listarAutoavaliacoes();
-        const existente = lista.find(a => a.id === id);
+        const lista = await apiService.getAutoavaliacoes();
+        const existente = lista.find((a: any) => a.id === id);
         if (existente) setEstado(existente);
       }
     }
@@ -61,10 +60,10 @@ export default function AutoavaliacaoFormScreen() {
       console.log('Salvando autoavaliação:', { id, estado });
       
       if (id) {
-        await atualizarAutoavaliacao(id, estado as Autoavaliacao);
+        await apiService.updateAutoavaliacao(id, estado as Autoavaliacao);
         console.log('Autoavaliação atualizada com sucesso');
       } else {
-        const resultado = await criarAutoavaliacao(estado as Omit<Autoavaliacao, 'id'>);
+        const resultado = await apiService.createAutoavaliacao(estado as Omit<Autoavaliacao, 'id'>);
         console.log('Autoavaliação criada com sucesso:', resultado);
       }
       

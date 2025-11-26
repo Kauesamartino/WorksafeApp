@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { criarRecomendacao, listarRecomendacoes, atualizarRecomendacao } from '../../services/mockApi';
+import { apiService } from '../../services/api';
 import { Recomendacao } from '../../types/entities';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types/navigation';
@@ -12,7 +12,6 @@ export default function RecomendacaoFormScreen() {
   const nav = useNavigation();
   const { id } = route.params || {};
   const [estado, setEstado] = useState<Partial<Recomendacao>>({
-    usuarioId: 1,
     tipoAtividade: 'PAUSA',
     titulo: '',
     descricao: '',
@@ -23,8 +22,8 @@ export default function RecomendacaoFormScreen() {
   useEffect(() => {
     async function carregar() {
       if (id) {
-        const lista = await listarRecomendacoes();
-        const existente = lista.find(r => r.id === id);
+        const lista = await apiService.getRecomendacoes();
+        const existente = lista.find((r: any) => r.id === id);
         if (existente) setEstado(existente);
       }
     }
@@ -43,10 +42,10 @@ export default function RecomendacaoFormScreen() {
       console.log('Salvando recomendação:', { id, estado });
       
       if (id) {
-        await atualizarRecomendacao(id, estado as Recomendacao);
+        await apiService.updateRecomendacao(id, estado as Recomendacao);
         console.log('Recomendação atualizada com sucesso');
       } else {
-        const resultado = await criarRecomendacao(estado as Omit<Recomendacao, 'id'>);
+        const resultado = await apiService.createRecomendacao(estado as Omit<Recomendacao, 'id'>);
         console.log('Recomendação criada com sucesso:', resultado);
       }
       

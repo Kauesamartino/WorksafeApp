@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextStyle } from 'react-native';
 import { useTheme } from '../../theme';
-import { listarAutoavaliacoes, listarRecomendacoes, listarWearableData } from '../../services/mockApi';
+import { apiService } from '../../services/api';
 import { Autoavaliacao, Recomendacao, WearableData } from '../../types/entities';
 
 interface Kpi {
@@ -17,9 +17,9 @@ export default function DashboardScreen() {
   const [wear, setWear] = useState<WearableData[]>([]);
 
   useEffect(() => {
-    listarAutoavaliacoes().then(setAutos);
-    listarRecomendacoes().then(setRecs);
-    listarWearableData().then(setWear);
+    apiService.getAutoavaliacoes().then(setAutos);
+    apiService.getRecomendacoes().then(setRecs);
+    apiService.getWearableData().then(setWear);
   }, []);
 
   const media = (key: keyof Autoavaliacao) => {

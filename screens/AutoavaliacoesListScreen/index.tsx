@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, Button, RefreshControl } from 'react-
 
 import { useIsFocused, useNavigation, NavigationProp } from '@react-navigation/native';
 import { Autoavaliacao } from '../../types/entities';
-import { listarAutoavaliacoes, removerAutoavaliacao } from '../../services/mockApi';
+import { apiService } from '../../services/api';
 import { useTheme } from '../../theme';
 import { RootStackParamList } from '../../types/navigation';
 
@@ -18,7 +18,7 @@ export default function AutoavaliacoesListScreen() {
   async function load() {
     setLoading(true); setError('');
     try {
-      const res = await listarAutoavaliacoes();
+      const res = await apiService.getAutoavaliacoes();
       setData(res);
     } catch (e: any) {
       setError(e.message || 'Erro ao carregar');
@@ -28,7 +28,7 @@ export default function AutoavaliacoesListScreen() {
   useEffect(() => { if (isFocused) load(); }, [isFocused]);
 
   async function excluir(id: number) {
-    try { await removerAutoavaliacao(id); load(); } catch (e: any) { setError(e.message || 'Falha ao excluir'); }
+    try { await apiService.deleteAutoavaliacao(id); load(); } catch (e: any) { setError(e.message || 'Falha ao excluir'); }
   }
 
   return (
@@ -60,7 +60,6 @@ export default function AutoavaliacoesListScreen() {
             </View>
             {item.comentarios ? <Text style={styles.coment}>"{item.comentarios}"</Text> : null}
             <View style={styles.actionsRow}>
-              <Button title="Editar" onPress={() => navigation.navigate('AutoavaliacaoForm', { id: item.id })} />
               <Button title="Excluir" color={colors.danger} onPress={() => excluir(item.id)} />
             </View>
           </View>

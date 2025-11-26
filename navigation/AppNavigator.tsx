@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -12,6 +12,8 @@ import WearableDataScreen from '../screens/WearableDataScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import RecomendacaoFormScreen from '../screens/RecomendacaoFormScreen';
 import AutoavaliacaoFormScreen from '../screens/AutoavaliacaoFormScreen';
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
@@ -31,9 +33,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     paddingTop: 50,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  authContainer: {
+    flex: 1,
+  },
 });
 
-function MainTabs() {
+function MainTabs({ onLogout }: { onLogout?: () => void }) {
   return (
     <Tabs.Navigator
       screenOptions={({ route }) => ({
@@ -156,7 +167,7 @@ function MainTabs() {
       >
         {() => (
           <ScreenWrapper>
-            <PerfilScreen />
+            <PerfilScreen onLogout={onLogout} />
           </ScreenWrapper>
         )}
       </Tabs.Screen>
@@ -165,6 +176,59 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showRegister, setShowRegister] = useState(false);
+
+  useEffect(() => {
+    // Aqui você pode verificar se existe um token salvo
+    // Por enquanto, vamos assumir que o usuário não está logado
+    setIsLoading(false);
+  }, []);
+
+  const handleLoginSuccess = (userData: any) => {
+    // Aqui você salvaria o token e dados do usuário
+    console.log('Login successful:', userData);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    // Limpar token e dados salvos
+    setIsAuthenticated(false);
+  };
+
+  const handleRegisterSuccess = () => {
+    setShowRegister(false);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Carregando...</Text>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <NavigationContainer>
+        <View style={styles.authContainer}>
+          {showRegister ? (
+            <RegisterScreen
+              onRegisterSuccess={handleRegisterSuccess}
+              onNavigateToLogin={() => setShowRegister(false)}
+            />
+          ) : (
+            <LoginScreen
+              onLoginSuccess={handleLoginSuccess}
+              onNavigateToRegister={() => setShowRegister(true)}
+            />
+          )}
+        </View>
+      </NavigationContainer>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -181,7 +245,9 @@ export default function AppNavigator() {
           headerBackTitleVisible: false,
         }}
       >
-        <Stack.Screen name="Root" component={MainTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="Root" options={{ headerShown: false }}>
+          {() => <MainTabs onLogout={handleLogout} />}
+        </Stack.Screen>
         <Stack.Screen 
           name="AutoavaliacaoForm" 
           component={AutoavaliacaoFormScreen}
